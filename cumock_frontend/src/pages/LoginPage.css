@@ -1,0 +1,88 @@
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px); /* Adjust based on header height */
+  padding: 2rem;
+}
+
+.auth-box {
+  background-color: #282828; /* Dark background for the form box */
+  padding: 2.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  color: #f0f0f0;
+}
+
+.auth-box h2 {
+  font-size: 2rem;
+  color: #ffffff; /* White heading */
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #cccccc; /* Slightly darker text for labels */
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #555555; /* Darker border */
+  border-radius: 4px;
+  background-color: #1e1e1e; /* Deep dark input background */
+  color: #f0f0f0; /* Light text */
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #007bff; /* Highlight on focus */
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.auth-button.primary {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #e74c3c; /* Reddish button color */
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem;
+}
+
+.auth-button.primary:hover {
+  background-color: #c0392b;
+}
+
+.auth-link {
+  display: block;
+  margin-top: 1.5rem;
+  color: #007bff; /* Standard link color */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.auth-link:hover {
+  color: #66b5ff; /* Lighter on hover */
+  text-decoration: underline;
+}
+
+.error-message {
+  color: #ff6b6b; /* Lighter red for errors */
+  margin-top: 1rem;
+  font-size: 0.9rem;
+} 

@@ -1,0 +1,241 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #213547;
+  background-color: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1e1e1e; /* Deep dark background */
+  color: #f0f0f0; /* Light text */
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff; /* White headings */
+  margin-bottom: 0.5em;
+  line-height: 1.2;
+}
+
+p {
+  margin-bottom: 1em;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Basic Layout Styles */
+header {
+  background-color: #ffffff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+nav {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+nav a {
+  color: #213547;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+nav a:hover {
+  background-color: #f0f0f0;
+}
+
+nav button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+nav button:hover {
+  background-color: #0056b3;
+}
+
+main {
+  padding: 20px;
+  min-height: calc(100vh - 140px);
+}
+
+footer {
+  background-color: #f8f9fa;
+  padding: 1rem 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem; /* Add horizontal padding */
+}
+
+.hero-section {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.hero-section h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.get-started-button {
+  background-color: #e53e3e; /* Красный цвет кнопки */
+  color: white;
+  padding: 12px 24px;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.get-started-button:hover {
+  background-color: #c53030;
+}
+
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.feature-card {
+  background-color: #282c34;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.feature-card h2 {
+  font-size: 1.5rem;
+  margin-top: 0;
+}
+
+/* Layout Styles */
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-left: auto;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.login-link {
+  color: #007bff;
+}
+
+.logout-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+.get-started-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.get-started-button:hover {
+  background-color: #218838;
+}
+
+/* Add some basic styles for links to make them visible on dark background */
+a {
+  color: #007bff; /* A bright color for visibility */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #66b5ff; /* Lighter on hover */
+  text-decoration: underline;
+}
+
+/* Utility Classes (can be moved or expanded later) */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem; /* Add horizontal padding */
+}
+
+/* Remove default button styles if they interfere */
+button {
+  cursor: pointer;
+}

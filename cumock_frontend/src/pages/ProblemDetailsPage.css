@@ -1,0 +1,202 @@
+.problem-details {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+  color: #f0f0f0; /* Light text */
+}
+
+.problem-header {
+  margin-bottom: 2rem;
+}
+
+.problem-header h1 {
+  font-size: 2.5rem;
+  color: #ffffff; /* White heading */
+  margin-bottom: 1rem;
+}
+
+.problem-meta {
+  display: flex;
+  gap: 1.5rem;
+  color: #cccccc; /* Slightly darker text for meta info */
+  font-size: 0.9rem;
+}
+
+.difficulty, .category {
+  padding: 0.25rem 0.75rem;
+  background-color: #333333; /* Dark background for meta pills */
+  border-radius: 4px;
+}
+
+.problem-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.problem-description {
+  background-color: #282828; /* Dark card background */
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.problem-description h2 {
+  font-size: 1.8rem;
+  color: #ffffff; /* White heading */
+  margin-bottom: 1rem;
+}
+
+.problem-description h3 {
+  font-size: 1.3rem;
+  color: #f0f0f0; /* Light heading */
+  margin: 1.5rem 0 0.75rem;
+}
+
+.problem-description p {
+  color: #cccccc; /* Slightly darker text */
+  line-height: 1.6;
+}
+
+.example {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background-color: #333333; /* Darker background for examples */
+  border-radius: 8px;
+}
+
+.example h4 {
+  color: #ffffff; /* White heading */
+  margin-bottom: 0.5rem;
+}
+
+.example-input, .example-output {
+  margin: 0.75rem 0;
+}
+
+.example pre {
+  background-color: #1e1e1e; /* Deep dark background for code blocks */
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+  color: #e0e0e0; /* Light text for code */
+  font-family: 'Fira Code', 'Fira Mono', monospace;
+}
+
+.code-editor-section {
+  background-color: #282828; /* Dark card background */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #333333; /* Darker header background */
+  border-bottom: 1px solid #444444; /* Darker border */
+}
+
+.editor-header select {
+  padding: 0.5rem;
+  border: 1px solid #555555; /* Darker border */
+  border-radius: 4px;
+  background-color: #1e1e1e; /* Deep dark background */
+  color: #f0f0f0; /* Light text */
+  font-size: 0.9rem;
+}
+
+.editor-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.editor-buttons button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #e74c3c; /* Reddish button color */
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.editor-buttons button:hover {
+  background-color: #c0392b;
+}
+
+.code-editor {
+  flex-grow: 1;
+  /* Monaco editor styles are often controlled via options */
+  /* Ensure the theme option is set to a dark theme like 'vs-dark' or a custom one */
+}
+
+.output-section {
+  padding: 1.5rem;
+  background-color: #1e1e1e; /* Deep dark background */
+  border-top: 1px solid #444444; /* Darker border */
+  color: #f0f0f0;
+}
+
+.output-section h3 {
+  font-size: 1.2rem;
+  color: #ffffff; /* White heading */
+  margin-bottom: 0.75rem;
+}
+
+.error-message {
+  color: #ff6b6b; /* Lighter red for errors */
+  padding: 0.75rem;
+  background-color: #3a2828; /* Dark reddish background for errors */
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.output-content {
+  background-color: #333333; /* Darker background for output block */
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: monospace;
+  color: #e0e0e0; /* Light text for output */
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #f0f0f0; /* Light text */
+}
+
+.error {
+  color: #ff6b6b; /* Lighter red for error messages */
+  background-color: #3a2828; /* Dark reddish background */
+  border-radius: 8px;
+  margin: 2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .problem-content {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .editor-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+} 
