@@ -8,5 +8,6 @@ CREATE TABLE pvp_contest (
                              end_time TIMESTAMP,
                              status VARCHAR(20) NOT NULL,
                              winner_id BIGINT,
+                             challenge_expires_at TIMESTAMP,
                              created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
