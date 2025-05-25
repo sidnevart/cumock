@@ -2,12 +2,12 @@
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 2rem;
-  color: #f0f0f0;
+  color: var(--text-primary);
 }
 
 .problems-header h1 {
   font-size: 2.5rem;
-  color: #ffffff;
+  color: var(--text-primary);
   margin-bottom: 1.5rem;
 }
 
@@ -18,7 +18,7 @@
 }
 
 .problem-item {
-  background-color: #282828; /* Dark card background */
+  background-color: var(--bg-secondary);
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -26,25 +26,25 @@
 }
 
 .problem-item:hover {
-  background-color: #333333; /* Slightly lighter on hover */
+  background-color: var(--bg-tertiary);
 }
 
 .problem-item h2 {
   font-size: 1.3rem;
-  color: #ffffff;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .problem-meta {
   display: flex;
   gap: 1rem;
-  color: #cccccc;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
 .problem-item a {
   text-decoration: none;
-  color: inherit; /* Inherit color from parent */
+  color: inherit;
 }
 
 /* Styles for filters/pagination if added later */
@@ -52,7 +52,7 @@
 .pagination-controls {
   margin-top: 1.5rem;
   padding: 1rem;
-  background-color: #282828;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
   display: flex;
   gap: 1rem;
@@ -61,8 +61,8 @@
 }
 
 .pagination-controls button {
-  background-color: #e74c3c;
-  color: white;
+  background-color: var(--accent-color);
+  color: var(--text-primary);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -71,10 +71,10 @@
 }
 
 .pagination-controls button:disabled {
-  background-color: #555;
+  background-color: var(--bg-tertiary);
   cursor: not-allowed;
 }
 
 .pagination-controls button:hover:not(:disabled) {
-  background-color: #c0392b;
+  background-color: var(--accent-hover);
 } 

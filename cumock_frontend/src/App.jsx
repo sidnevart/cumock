@@ -8,7 +8,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProblemsPage from './pages/ProblemsPage'; // Импорт страницы списка проблем
 import ProblemDetailsPage from './pages/ProblemDetailsPage'; // Импорт страницы деталей проблемы
 import BattlePage from './pages/BattlePage'; // Импорт страницы Battle
-import PvPContestPage from './pages/PvPContestPage'; // Импорт страницы матча PvP
+import PvPContestPage from './pages/PvPContestPage';// Импорт страницы матча PvP
+import AdminDashboard from './pages/AdminDashboard'; // Make sure paths are correct
+import UserManagement from './pages/UserManagement'; // If moved to admin folder, update path
+import ProblemManagement from './pages/ProblemManagement'; // If moved to admin folder, update path
+import TestCaseManagement from './pages/TestCaseManagement'; // If moved to admin folder, update path
 
 function App() {
   return (
@@ -32,6 +36,11 @@ function App() {
 
         {/* Добавьте другие маршруты здесь по мере их реализации */}
         <Route path="*" element={<NotFoundPage />} /> {/* Маршрут для 404 */}
+
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<UserManagement />} />
+        <Route path="/admin/problems" element={<ProblemManagement />} />
+        <Route path="/admin/test-cases/:problemId" element={<TestCaseManagement />} />
       </Routes>
     </Layout>
   );

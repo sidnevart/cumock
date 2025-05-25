@@ -12,9 +12,25 @@ const searchUsers = (username) => {
   });
 };
 
-const userService = {
-  searchUsers,
-  // Можно добавить другие функции, например, для получения информации о пользователе по ID
+// Функция для получения данных текущего пользователя
+const getCurrentUser = () => {
+  return axios.get(API_URL + '/me', {
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('user_token') },
+    withCredentials: true
+  });
 };
 
-export default userService; 
+// Функция для проверки, является ли текущий пользователь администратором
+const checkIfAdmin = () => {
+  return axios.get(API_URL + '/is_admin', {
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('user_token') }
+  });
+};
+
+const userService = {
+  searchUsers,
+  getCurrentUser,
+  checkIfAdmin
+};
+
+export default userService;

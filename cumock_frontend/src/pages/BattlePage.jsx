@@ -1,41 +1,38 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import problemService from '../api/problems';
-import pvpService from '../api/pvp'; // Создадим этот сервис позже
-import userService from '../api/user'; // Импорт сервиса пользователей
+import pvpService from '../api/pvp';
+import userService from '../api/user';
+import './BattlePage.css';
 
 function BattlePage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id;
 
-  const [problems, setProblems] = useState([]);
-  const [selectedProblem1, setSelectedProblem1] = useState('');
-  const [selectedProblem2, setSelectedProblem2] = useState('');
-  const [searchUsername, setSearchUsername] = useState(''); // Для поля поиска
-  const [searchResults, setSearchResults] = useState([]); // Результаты поиска
-  const [selectedChallengedUser, setSelectedChallengedUser] = useState(null); // Выбранный для вызова пользователь
-  const [challenges, setChallenges] = useState([]); // Входящие вызовы
+  const [searchUsername, setSearchUsername] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedChallengedUser, setSelectedChallengedUser] = useState(null);
+  const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [challengeLoading, setChallengeLoading] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false); // Состояние загрузки для поиска
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
-    if (!userId) return; // Не загружаем данные, если пользователь не авторизован
+    if (!userId) return;
     fetchData();
-    // Возможно, потребуется polling или WebSockets для обновления списка вызовов в реальном времени
+    // Poll for new challenges every 30 seconds
+    const interval = setInterval(() => fetchData(), 30000);
+    return () => clearInterval(interval);
   }, [userId]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Загружаем список проблем для выбора
-      const problemsResponse = await problemService.getAllProblems(); // Используем getAllProblems без пагинации для простоты выбора
-      setProblems(problemsResponse.data);
-
-      // Загружаем входящие вызовы для текущего пользователя
-      const challengesResponse = await pvpService.getUserChallenges(userId, 'CHALLENGE'); // Создадим этот метод в pvpService
+      // Fetch incoming challenges for the current user
+      const challengesResponse = await pvpService.getUserChallenges(userId, 'CHALLENGE');
       setChallenges(challengesResponse.data);
-
     } catch (error) {
       console.error('Error fetching battle data:', error);
     } finally {
@@ -48,7 +45,7 @@ function BattlePage() {
     setSearchLoading(true);
     try {
       const response = await userService.searchUsers(searchUsername);
-      // Фильтруем текущего пользователя из результатов поиска
+      // Filter out the current user from search results
       const filteredResults = response.data.filter(u => u.id !== userId);
       setSearchResults(filteredResults);
     } catch (error) {
@@ -60,21 +57,22 @@ function BattlePage() {
   };
 
   const handleCreateChallenge = async () => {
-    if (!userId || !selectedProblem1 || !selectedProblem2 || !selectedChallengedUser) {
-      alert('Пожалуйста, выберите задачи и пользователя для вызова.');
+    if (!userId || !selectedChallengedUser) {
+      alert('Пожалуйста, выберите пользователя для вызова.');
       return;
     }
+    
     setChallengeLoading(true);
     try {
-      await pvpService.createChallenge(userId, selectedChallengedUser.id, selectedProblem1, selectedProblem2);
-      alert('Вызов отправлен!');
-      // Сброс полей после отправки
+      // The backend will select random problems for both users
+      const response = await pvpService.createChallenge(userId, selectedChallengedUser.id);
+      alert('Вызов отправлен! Ваша задача и задача соперника будут выбраны случайным образом.');
+      
+      // Reset form after sending
       setSearchUsername('');
       setSearchResults([]);
       setSelectedChallengedUser(null);
-      setSelectedProblem1('');
-      setSelectedProblem2('');
-      fetchData(); // Обновить список вызовов
+      fetchData();
     } catch (error) {
       console.error('Error creating challenge:', error);
       alert(`Ошибка при создании вызова: ${error.response?.data || error.message}`);
@@ -86,14 +84,14 @@ function BattlePage() {
   const handleAcceptChallenge = async (contestId) => {
     if (!userId) return;
     try {
-      // Добавим перенаправление на страницу матча после принятия
-      const acceptedContest = await pvpService.acceptChallenge(contestId, userId);
+      await pvpService.acceptChallenge(contestId, userId);
       alert('Вызов принят! Матч начался.');
-      // TODO: Перенаправить на страницу активного матча с contestId
-      fetchData(); // Обновить список вызовов
+      // Navigate to the contest page
+      navigate(`/pvp/contest/${contestId}`);
     } catch (error) {
       console.error('Error accepting challenge:', error);
       alert(`Ошибка при принятии вызова: ${error.response?.data || error.message}`);
+      fetchData();
     }
   };
 
@@ -102,113 +100,125 @@ function BattlePage() {
     try {
       await pvpService.rejectChallenge(contestId, userId);
       alert('Вызов отклонен.');
-      fetchData(); // Обновить список вызовов
+      fetchData();
     } catch (error) {
       console.error('Error rejecting challenge:', error);
       alert(`Ошибка при отклонении вызова: ${error.response?.data || error.message}`);
     }
   };
 
-  if (loading) {
-    return <div>Загрузка данных для PvP...</div>;
+  if (loading && challenges.length === 0) {
+    return <div className="container loading">Загрузка данных для PvP...</div>;
   }
 
   if (!user) {
-    return <div>Пожалуйста, войдите, чтобы участвовать в PvP.</div>;
+    return <div className="container">Пожалуйста, войдите, чтобы участвовать в PvP.</div>;
   }
 
   return (
     <div className="container">
       <h1>PvP Battle</h1>
 
-      {/* Раздел создания вызова */}
-      <div>
+      {/* Challenge creation section */}
+      <section className="challenge-section">
         <h2>Создать вызов</h2>
-        <div>
+        <div className="info-box">
+          <p>Внимание: Задачи для обоих участников будут выбраны системой случайным образом.</p>
+        </div>
+        
+        <div className="search-container">
           <label htmlFor="searchUsername">Найти пользователя для вызова:</label>
-          <input
-            type="text"
-            id="searchUsername"
-            value={searchUsername}
-            onChange={(e) => setSearchUsername(e.target.value)}
-          />
-          <button onClick={handleSearchUsers} disabled={searchLoading}>Найти</button>
+          <div className="search-input-group">
+            <input
+              type="text"
+              id="searchUsername"
+              value={searchUsername}
+              onChange={(e) => setSearchUsername(e.target.value)}
+              placeholder="Введите имя пользователя"
+            />
+            <button 
+              onClick={handleSearchUsers} 
+              disabled={searchLoading || !searchUsername.trim()}
+              className="search-button"
+            >
+              {searchLoading ? 'Поиск...' : 'Найти'}
+            </button>
+          </div>
         </div>
 
-        {/* Результаты поиска */}
-        {searchLoading && <p>Поиск...</p>}
+        {/* Search results */}
+        {searchLoading && <p className="loading-text">Поиск пользователей...</p>}
+        
         {!searchLoading && searchResults.length > 0 && (
-            <div>
-                <h3>Результаты поиска:</h3>
-                <ul>
-                    {searchResults.map(foundUser => (
-                        <li key={foundUser.id} onClick={() => setSelectedChallengedUser(foundUser)} style={{ cursor: 'pointer', fontWeight: selectedChallengedUser?.id === foundUser.id ? 'bold' : 'normal' }}>
-                            {foundUser.username} ({foundUser.email})
-                        </li>
-                    ))}
-                </ul>
-            </div>
+          <div className="search-results">
+            <h3>Результаты поиска:</h3>
+            <ul>
+              {searchResults.map(foundUser => (
+                <li 
+                  key={foundUser.id} 
+                  onClick={() => setSelectedChallengedUser(foundUser)}
+                  className={selectedChallengedUser?.id === foundUser.id ? 'selected' : ''}
+                >
+                  <span className="username">{foundUser.username}</span>
+                  <span className="email">({foundUser.email})</span>
+                  {selectedChallengedUser?.id === foundUser.id && 
+                    <span className="selected-mark">✓</span>
+                  }
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
-         {!searchLoading && searchUsername && searchResults.length === 0 && <p>Пользователь не найден.</p>}
+        
+        {!searchLoading && searchUsername && searchResults.length === 0 && 
+          <p className="no-results">Пользователь не найден.</p>
+        }
 
-        {/* Выбранный для вызова пользователь */}
+        {/* Selected user info */}
         {selectedChallengedUser && (
-            <div>
-                <p>Выбран пользователь для вызова: <strong>{selectedChallengedUser.username}</strong></p>
-            </div>
+          <div className="selected-user">
+            <p>Выбран пользователь для вызова: <strong>{selectedChallengedUser.username}</strong></p>
+          </div>
         )}
 
-        <div>
-          <label htmlFor="problem1">Ваша задача:</label>
-          <select
-            id="problem1"
-            value={selectedProblem1}
-            onChange={(e) => setSelectedProblem1(e.target.value)}
-          >
-            <option value="">Выберите задачу</option>
-            {problems.map(problem => (
-              <option key={problem.id} value={problem.id}>{problem.title}</option>
+        <button 
+          onClick={handleCreateChallenge} 
+          disabled={challengeLoading || !selectedChallengedUser}
+          className="submit-button"
+        >
+          {challengeLoading ? 'Отправка...' : 'Отправить вызов'}
+        </button>
+      </section>
+
+      {/* Incoming challenges section */}
+      <section className="challenges-section">
+        <h2>Входящие вызовы</h2>
+        {challenges.length === 0 ? (
+          <p className="no-challenges">Нет входящих вызовов.</p>
+        ) : (
+          <ul className="challenge-list">
+            {challenges.map(challenge => (
+              <li key={challenge.id} className="challenge-item">
+                <div className="challenge-info">
+                  <span className="challenger">Вызов от: {challenge.user1Username || challenge.user1Id}</span>
+                  <span className="status">Статус: {challenge.status}</span>
+                  <span className="expires">Истекает: {new Date(challenge.challengeExpiresAt).toLocaleString()}</span>
+                </div>
+                <div className="challenge-actions">
+                  <button onClick={() => handleAcceptChallenge(challenge.id)} className="accept-button">
+                    Принять
+                  </button>
+                  <button onClick={() => handleRejectChallenge(challenge.id)} className="reject-button">
+                    Отклонить
+                  </button>
+                </div>
+              </li>
             ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="problem2">Задача противника:</label>
-          <select
-            id="problem2"
-            value={selectedProblem2}
-            onChange={(e) => setSelectedProblem2(e.target.value)}
-          >
-             <option value="">Выберите задачу</option>
-            {problems.map(problem => (
-              <option key={problem.id} value={problem.id}>{problem.title}</option>
-            ))}
-          </select>
-        </div>
-        <button onClick={handleCreateChallenge} disabled={challengeLoading || !selectedChallengedUser || !selectedProblem1 || !selectedProblem2}>Отправить вызов</button>
-      </div>
-
-      {/* Раздел входящих вызовов */}
-      <div>
-          <h2>Входящие вызовы</h2>
-          {challenges.length === 0 ? (
-              <p>Нет входящих вызовов.</p>
-          ) : (
-              <ul>
-                  {challenges.map(challenge => (
-                      <li key={challenge.id}>
-                          Вызов от пользователя {challenge.user1Id} ({challenge.status})
-                          <button onClick={() => handleAcceptChallenge(challenge.id)}>Принять</button>
-                          <button onClick={() => handleRejectChallenge(challenge.id)}>Отклонить</button>
-                      </li>
-                  ))}
-              </ul>
-          )}
-      </div>
-
-      {/* Здесь можно добавить список активных матчей и историю */}
-
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
 
-export default BattlePage; 
+export default BattlePage;

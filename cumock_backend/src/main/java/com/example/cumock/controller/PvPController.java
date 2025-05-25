@@ -45,9 +45,7 @@ public class PvPController {
         try {
             PvPContest contest = contestService.createChallenge(
                     request.getChallengerId(),
-                    request.getChallengedId(),
-                    request.getProblem1Id(),
-                    request.getProblem2Id()
+                    request.getChallengedId()
             );
             return ResponseEntity.ok(contest);
         } catch (IllegalStateException e) {

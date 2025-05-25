@@ -1,138 +1,371 @@
-.homepage-container {
-  padding: 2rem;
-  color: #f0f0f0;
+.homepage {
+  min-height: calc(100vh - 64px);
 }
 
-.hero-section {
+.hero {
+  padding: 6rem 0;
   text-align: center;
-  padding: 4rem 2rem;
-  background-color: #1e1e1e; /* Match body background */
-  margin-bottom: 3rem;
+  position: relative;
+  overflow: hidden;
 }
 
-.hero-section h1 {
-  font-size: 3.5rem;
-  font-weight: bold;
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, var(--bg-primary) 0%, rgba(30, 30, 30, 0.9) 100%);
+  z-index: -1;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.hero-title {
+  font-size: 4rem;
+  font-weight: 800;
   margin-bottom: 1.5rem;
-  color: #ffffff;
+  background: linear-gradient(120deg, var(--text-primary), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
 }
 
-.hero-section p {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  color: #cccccc;
+.hero-subtitle {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  margin-bottom: 2.5rem;
 }
 
-.get-started-button {
+.cta-button {
   display: inline-block;
-  background-color: #e74c3c; /* Reddish color from image */
-  color: white;
   padding: 1rem 2.5rem;
-  font-size: 1.2rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  text-decoration: none; /* Remove underline for link */
+  font-size: 1.25rem;
+  font-weight: 600;
+  background-color: var(--accent-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  text-decoration: none;
 }
 
-.get-started-button:hover {
-  background-color: #c0392b;
+.cta-button:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-2px);
 }
 
-.features-section {
+.features {
+  padding: 6rem 0;
+  background-color: var(--bg-secondary);
+}
+
+.features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  padding: 0 2rem 2rem;
+  gap: 2rem;
+  padding: 2rem 1.5rem;
 }
 
 .feature-card {
-  background-color: #282828; /* Dark card background */
+  background-color: var(--bg-primary);
+  border-radius: 12px;
   padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  color: #f0f0f0;
+  text-align: left;
+  transition: transform 0.3s ease;
 }
 
-.feature-card h2 {
-  font-size: 1.6rem;
-  margin-top: 0;
+.feature-card:hover {
+  transform: translateY(-8px);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  color: var(--accent-color);
+  margin-bottom: 1.5rem;
+}
+
+.feature-title {
+  font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
-.feature-card p {
-  color: #cccccc;
-  line-height: 1.5;
+.feature-description {
+  color: var(--text-muted);
+  line-height: 1.6;
 }
 
-.feature-card .icon {
-  /* Style for icons if you add them */
-  font-size: 2.5rem;
-  color: #e74c3c; /* Example icon color */
-  margin-bottom: 1rem;
+.how-it-works {
+  padding: 6rem 0;
 }
 
-/* How it Works Section */
-.how-it-works-section {
-  padding: 3rem 2rem;
+.section-title {
   text-align: center;
-  background-color: #282828;
-  margin-top: 3rem;
+  margin-bottom: 3rem;
 }
 
-.how-it-works-section h2 {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  color: #ffffff;
-}
-
-.how-it-works-steps {
-  display: flex;
-  justify-content: center;
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 2rem;
-  flex-wrap: wrap;
+  padding: 0 1.5rem;
 }
 
 .step-card {
-  background-color: #1e1e1e;
-  padding: 1.5rem;
-  border-radius: 8px;
-  width: 250px;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.step-number {
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3rem;
+  height: 3rem;
+  background-color: var(--accent-color);
+  color: var(--text-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.step-title {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.step-description {
+  color: var(--text-muted);
+}
+
+.telegram-bot {
+  padding: 6rem 0;
+  background-color: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.telegram-bot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(231, 76, 61, 0.1) 0%, rgba(30, 30, 30, 0.9) 100%);
+  z-index: 0;
+}
+
+.telegram-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.telegram-info {
   text-align: left;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.step-card h3 {
-  font-size: 1.3rem;
-  margin-top: 0;
-  color: #ffffff;
+.telegram-description {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
 }
 
-.step-card p {
-  color: #cccccc;
+.telegram-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background-color: var(--accent-color);
+  color: var(--text-primary);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
 }
 
-/* Responsive Design */
+.telegram-button:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+.telegram-icon {
+  font-size: 1.5rem;
+}
+
+.telegram-username {
+  margin-top: 1rem;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.telegram-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-card {
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.preview-header {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.preview-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  opacity: 0.7;
+}
+
+.preview-content {
+  color: var(--text-primary);
+}
+
+.preview-content p:first-child {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.preview-content p:last-child {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 768px) {
-  .hero-section h1 {
-    font-size: 36px;
+  .hero-title {
+    font-size: 3rem;
   }
 
-  .hero-section p {
-    font-size: 18px;
+  .hero-subtitle {
+    font-size: 1.25rem;
   }
 
-  .get-started-button {
-    width: 100%;
-  }
-
-  .features-section {
+  .features-grid,
+  .steps-grid {
     grid-template-columns: 1fr;
   }
 
-  .how-it-works-steps {
-    flex-direction: column;
+  .telegram-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
-} 
+
+  .telegram-info {
+    text-align: center;
+  }
+
+  .preview-card {
+    max-width: 100%;
+  }
+}
+
+
+/* Add this to your HomePage.css file */
+.admin-button {
+  background-color: #e74c3c;
+  color: white;
+  margin-left: 10px;
+  display: inline-block;
+  padding: 12px 25px;
+  font-weight: 600;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.admin-button:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+  .admin-button {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}
+
+/* Add these styles to your existing ProblemsPage.css file */
+
+/* Filter controls section */
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0 2rem 0;
+  padding: 1.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+/* Style for filter inputs */
+input[type="text"] {
+  padding: 0.75rem;
+  margin: 0.5rem 0 1rem 0;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: var(--bg-primary, #1e1e1e);
+  color: var(--text-primary, #f0f0f0);
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Improved spacing for pagination controls */
+.pagination-controls {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-controls button {
+  background-color: var(--accent-color);
+  color: var(--text-primary);
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 0 0.5rem;
+}
+
+/* Make sure the problems list items have good spacing */
+.problem-item {
+  margin-bottom: 1.25rem;
+}

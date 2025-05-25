@@ -9,4 +9,5 @@ public interface ProblemTestCaseRepository extends JpaRepository<ProblemTestCase
     List<ProblemTestCase> findByProblemIdAndIsSampleTrue(Long problemId);
 
     List<ProblemTestCase> findByProblemId(Long problemId);
+
 }

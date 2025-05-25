@@ -5,26 +5,33 @@ import com.example.cumock.dto.problem.PaginatedResponse;
 import com.example.cumock.dto.problem.ProblemResponse;
 import com.example.cumock.dto.problem.UpdateProblemRequest;
 import com.example.cumock.model.Problem;
+import com.example.cumock.model.ProblemTestCase;
 import com.example.cumock.repository.ProblemRepository;
+import com.example.cumock.repository.ProblemTestCaseRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
-@RequestMapping("/problems")
+@RequestMapping("/api/problems")
 public class ProblemController {
 
     private final ProblemRepository problemRepository;
 
-    public ProblemController(ProblemRepository problemRepository) {
+    private final ProblemTestCaseRepository testCaseRepository;
+
+    public ProblemController(ProblemRepository problemRepository, ProblemTestCaseRepository testCaseRepository) {
         this.problemRepository = problemRepository;
+        this.testCaseRepository = testCaseRepository;
     }
 
     @PostMapping
@@ -71,6 +78,25 @@ public class ProblemController {
         return ResponseEntity.ok(response);
     }
 
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<Problem> getProblemById(@PathVariable Long id) {
+        Problem problem = problemRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"));
+
+        return ResponseEntity.ok(problem);
+    }
+
+    @GetMapping("/{id}/tests")
+    public ResponseEntity<List<ProblemTestCase>> getProblemTests(@PathVariable Long id) {
+        if (!problemRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<ProblemTestCase> testCases = testCaseRepository.findByProblemIdAndIsSampleTrue(id);
+        return ResponseEntity.ok(testCases);
+    }
+
     @GetMapping("/paged")
     public ResponseEntity<PaginatedResponse<ProblemResponse>> getPaged(
             @RequestParam(defaultValue = "0") int page,
@@ -95,7 +121,6 @@ public class ProblemController {
 
         return ResponseEntity.ok(response);
     }
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProblem(@PathVariable Long id, @RequestBody UpdateProblemRequest request) {
         Problem problem = problemRepository.findById(id)
@@ -110,7 +135,6 @@ public class ProblemController {
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProblem(@PathVariable Long id) {
         if (!problemRepository.existsById(id)) {

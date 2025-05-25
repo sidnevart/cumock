@@ -4,9 +4,11 @@ import Editor from '@monaco-editor/react';
 import problemService from '../api/problems';
 import codeService from '../api/code';
 import './ProblemDetailsPage.css';
+import { useAuth } from '../context/AuthContext';
 
 function ProblemDetailsPage() {
   const { id } = useParams();
+  const { isAuthenticated, user } = useAuth();
   const [problem, setProblem] = useState(null);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
@@ -17,19 +19,65 @@ function ProblemDetailsPage() {
   useEffect(() => {
     const fetchProblem = async () => {
       try {
-        const response = await problemService.getProblemById(id);
-        setProblem(response.data);
-        setCode(getInitialCode(language));
+        console.log("Fetching problem details for ID:", id);
+        console.log("Authentication status:", isAuthenticated);
+        console.log("Current user:", user);
+        
+        if (!isAuthenticated) {
+          setError('Please log in to view problem details');
+          setLoading(false);
+          return;
+        }
+        
+        // Add a small delay to ensure authentication is ready
+        setTimeout(async () => {
+          try {
+            const response = await problemService.getProblemById(id);
+            console.log("Problem details response:", response.data);
+            setProblem(response.data);
+            setCode(getInitialCode(language));
+          } catch (err) {
+            handleFetchError(err);
+          } finally {
+            setLoading(false);
+          }
+        }, 500);
       } catch (err) {
-        setError('Failed to load problem');
-        console.error(err);
-      } finally {
+        handleFetchError(err);
         setLoading(false);
+      }
+    };
+    
+    const handleFetchError = (err) => {
+      console.error("Error fetching problem details:", err);
+      
+      if (err.response) {
+        console.error("Response data:", err.response?.data);
+        console.error("Status code:", err.response?.status);
+        console.error("Request URL:", err.config?.url);
+        
+        if (err.response?.status === 403) {
+          if (err.config?.url.includes('/details')) {
+            setError('Access denied. The endpoint may have changed to /api/problems/{id}/details.');
+          } else {
+            setError('Access denied. You do not have permission to view this problem.');
+          }
+        } else if (err.response?.status === 401) {
+          setError('Authentication required. Please log in again.');
+        } else if (err.response?.status === 404) {
+          setError('Problem not found. It may have been deleted or the ID is incorrect.');
+        } else {
+          setError('Failed to load problem: ' + (err.response?.data?.message || err.message));
+        }
+      } else if (err.request) {
+        setError('No response from server. Please check your network connection.');
+      } else {
+        setError('Request setup error: ' + err.message);
       }
     };
 
     fetchProblem();
-  }, [id]);
+  }, [id, isAuthenticated, user, language]);
 
   const getInitialCode = (lang) => {
     switch (lang) {
@@ -98,11 +146,22 @@ function ProblemDetailsPage() {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="problem-details loading">Loading problem details...</div>;
   }
 
   if (error) {
-    return <div className="error">{error}</div>;
+    return (
+      <div className="problem-details">
+        <div className="error">
+          <h2>Error</h2>
+          <p>{error}</p>
+          {(!isAuthenticated && error.includes('log in')) && (
+            <Link to="/login" className="login-button">Log In</Link>
+          )}
+          <Link to="/problems" className="back-button">Back to Problems</Link>
+        </div>
+      </div>
+    );
   }
 
   if (!problem) {

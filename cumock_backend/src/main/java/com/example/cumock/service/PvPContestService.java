@@ -1,9 +1,11 @@
 package com.example.cumock.service;
 
 import com.example.cumock.dto.pvp.PvPProgressResponse;
+import com.example.cumock.model.Problem;
 import com.example.cumock.model.ProblemTestCase;
 import com.example.cumock.model.PvPContest;
 import com.example.cumock.model.Submission;
+import com.example.cumock.repository.ProblemRepository;
 import com.example.cumock.repository.ProblemTestCaseRepository;
 import com.example.cumock.repository.PvPContestRepository;
 import com.example.cumock.repository.SubmissionRepository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class PvPContestService {
@@ -23,6 +26,7 @@ public class PvPContestService {
     private final SubmissionRepository submissionRepository;
 
     private final ProblemTestCaseRepository testCaseRepository;
+    private final ProblemRepository problemRepository;
 
     private final RunResultCacheService runResultCache;
 
@@ -32,12 +36,14 @@ public class PvPContestService {
             PvPContestRepository repository,
             SubmissionRepository submissionRepository,
             ProblemTestCaseRepository testCaseRepository,
-            RunResultCacheService runResultCache
+            RunResultCacheService runResultCache,
+            ProblemRepository problemRepository
     ) {
         this.repository = repository;
         this.submissionRepository = submissionRepository;
         this.testCaseRepository = testCaseRepository;
         this.runResultCache = runResultCache;
+        this.problemRepository = problemRepository;
     }
 
     public PvPContest startMatch(Long user1Id, Long user2Id, Long task1Id, Long task2Id) {
@@ -51,8 +57,8 @@ public class PvPContestService {
         return repository.save(contest);
     }
 
-    public PvPContest createChallenge(Long challengerId, Long challengedId, Long problem1Id, Long problem2Id) {
-        // Check if either user is already in an active contest
+    public PvPContest createChallenge(Long challengerId, Long challengedId) {
+        // Проверяем, что оба пользователя не участвуют в активных контестах
         Optional<PvPContest> existingContest = repository.findFirstByUser1IdOrUser2IdAndStatus(
                 challengerId, challengerId, "ONGOING");
         if (existingContest.isPresent()) {
@@ -65,6 +71,10 @@ public class PvPContestService {
             throw new IllegalStateException("Challenged user is already in an active contest");
         }
 
+        // Получаем случайные задачи для каждого пользователя
+        Long problem1Id = getRandomProblemId();
+        Long problem2Id = getRandomProblemId();
+
         PvPContest contest = new PvPContest();
         contest.setUser1Id(challengerId);
         contest.setUser2Id(challengedId);
@@ -74,6 +84,15 @@ public class PvPContestService {
         contest.setStatus("CHALLENGE");
         contest.setChallengeExpiresAt(LocalDateTime.now().plusMinutes(CHALLENGE_EXPIRY_MINUTES));
         return repository.save(contest);
+    }
+
+    private Long getRandomProblemId() {
+        List<Problem> problems = problemRepository.findAll();
+        if (problems.isEmpty()) {
+            throw new IllegalStateException("No problems available");
+        }
+        int randomIndex = ThreadLocalRandom.current().nextInt(problems.size());
+        return problems.get(randomIndex).getId();
     }
 
     public PvPContest acceptChallenge(Long contestId, Long userId) {

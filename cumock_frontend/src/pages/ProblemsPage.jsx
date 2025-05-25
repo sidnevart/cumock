@@ -65,12 +65,12 @@ function ProblemsPage() {
   }
 
   return (
-    <div className="problems-container">
+        <div className="problems-container">
       <div className="problems-header">
         <h1>Список задач</h1>
       </div>
 
-      <div>
+      <div className="filter-controls">
         <input
           type="text"
           name="title"

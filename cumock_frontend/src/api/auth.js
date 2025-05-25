@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api/auth'; // Убедитесь, что это правильный URL вашего бекенда
+axios.defaults.withCredentials = true;
 
 const register = (username, email, password) => {
   return axios.post(API_URL + '/register', {

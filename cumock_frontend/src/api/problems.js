@@ -1,38 +1,34 @@
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 
-const API_URL = 'http://localhost:8080'; // Базовый URL вашего бекенда
-
-// Функция для получения списка проблем (с фильтрацией)
+// Function to get problem list (with filtering)
 const getAllProblems = (filters = {}) => {
-  return axios.get(API_URL + '/problems', {
-    params: filters,
-    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('user_token') }
-  });
+  return axiosInstance.get('/api/problems', { params: filters });
 };
 
-// Функция для получения списка проблем с пагинацией
+// Function for paginated problems
 const getPagedProblems = (page = 0, size = 10, sortBy = 'id') => {
-  return axios.get(API_URL + '/problems/paged', {
-    params: {
-      page,
-      size,
-      sortBy
-    },
-    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('user_token') }
+  return axiosInstance.get('/api/problems/paged', { 
+    params: { page, size, sortBy }
   });
 };
 
-// Функция для получения деталей конкретной проблемы
+// Function to get problem details - ИЗМЕНЕНО! Использует правильный endpoint
 const getProblemById = (id) => {
-  return axios.get(`${API_URL}/problems/${id}`, {
-    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('user_token') }
-  });
+  console.log('Token used for problem fetch:', localStorage.getItem('user_token')?.substring(0, 15) + '...');
+  // Изменен URL согласно бэкенд-контроллеру
+  return axiosInstance.get(`/api/problems/${id}/details`);
+};
+
+// Function to get test cases for a problem
+const getProblemTestCases = (id) => {
+  return axiosInstance.get(`/api/problems/${id}/tests`);
 };
 
 const problemService = {
   getAllProblems,
   getPagedProblems,
   getProblemById,
+  getProblemTestCases
 };
 
-export default problemService; 
+export default problemService;
