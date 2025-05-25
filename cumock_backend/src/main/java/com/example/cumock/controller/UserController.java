@@ -25,7 +25,8 @@ public class UserController {
         return ResponseEntity.ok(new UserResponse(
                 user.getId(),
                 user.getEmail(),
-                user.getUsername()
+                user.getUsername(),
+                user.getRole()
         ));
     }
 
@@ -33,8 +34,15 @@ public class UserController {
     public ResponseEntity<List<UserResponse>> searchUsers(@RequestParam String username) {
         List<User> users = userService.searchUsersByUsername(username);
         List<UserResponse> userResponses = users.stream()
-                .map(user -> new UserResponse(user.getId(), user.getEmail(), user.getUsername()))
+                .map(user -> new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getRole()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(userResponses);
+    }
+
+    // check if admin
+    @GetMapping("/is_admin")
+    public ResponseEntity<Boolean> isAdmin() {
+        boolean isAdmin = userService.isCurrentUserAdmin();
+        return ResponseEntity.ok(isAdmin);
     }
 }

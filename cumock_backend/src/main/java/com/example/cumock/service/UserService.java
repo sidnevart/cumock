@@ -30,4 +30,9 @@ public class UserService {
     public List<User> searchUsersByUsername(String username) {
         return userRepository.findByUsernameContainingIgnoreCase(username);
     }
+
+    public boolean isCurrentUserAdmin() {
+        User currentUser = getCurrentUser();
+        return currentUser.getRole().equals("ADMIN");
+    }
 }
