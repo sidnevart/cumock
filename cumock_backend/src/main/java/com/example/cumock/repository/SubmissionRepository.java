@@ -3,7 +3,7 @@ package com.example.cumock.repository;
 import com.example.cumock.model.Submission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
+import java.util.Optional;
 import java.util.List;
 
 @Repository
@@ -21,5 +21,11 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     List<Submission> findByUserIdAndProblemIdAndContestId(Long userId, Long problemId, Long contestId);
     // findByUserIdAndVerdict(Long,String)
+
+    List<Submission> findByUserIdAndProblemIdAndContestIdAndVerdict(Long userId, Long problemId, Long contestId, String verdict);
+    
+    Optional<Submission> findFirstByUserIdAndProblemIdAndContestIdAndVerdictOrderByCreatedAtAsc(
+        Long userId, Long problemId, Long contestId, String verdict);
+        
     List<Submission> findByUserIdAndVerdict(Long userId, String verdict);
 }

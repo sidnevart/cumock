@@ -10,11 +10,14 @@ import com.example.cumock.repository.ProblemTestCaseRepository;
 import com.example.cumock.repository.PvPContestRepository;
 import com.example.cumock.repository.SubmissionRepository;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -22,13 +25,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PvPContestService {
 
     private final PvPContestRepository repository;
-
     private final SubmissionRepository submissionRepository;
-
     private final ProblemTestCaseRepository testCaseRepository;
     private final ProblemRepository problemRepository;
-
     private final RunResultCacheService runResultCache;
+    private final SimpMessagingTemplate messagingTemplate; // Добавляем поле
 
     private static final int CHALLENGE_EXPIRY_MINUTES = 5;
 
@@ -37,13 +38,15 @@ public class PvPContestService {
             SubmissionRepository submissionRepository,
             ProblemTestCaseRepository testCaseRepository,
             RunResultCacheService runResultCache,
-            ProblemRepository problemRepository
+            ProblemRepository problemRepository,
+            SimpMessagingTemplate messagingTemplate // Добавляем в конструктор
     ) {
         this.repository = repository;
         this.submissionRepository = submissionRepository;
         this.testCaseRepository = testCaseRepository;
         this.runResultCache = runResultCache;
         this.problemRepository = problemRepository;
+        this.messagingTemplate = messagingTemplate; // Инициализируем поле
     }
 
     public PvPContest startMatch(Long user1Id, Long user2Id, Long task1Id, Long task2Id) {
@@ -163,9 +166,28 @@ public class PvPContestService {
         }
     }
 
-    @Scheduled(fixedRate = 60_000)
-    public void checkSomething() {
-        System.out.println("Каждую минуту проверяю...");
+
+    @Scheduled(fixedRate = 10_000) // Проверяем каждые 10 секунд
+    public void checkForEarlyFinish() {
+        List<PvPContest> ongoing = repository.findAllByStatus("ONGOING");
+        
+        for (PvPContest contest : ongoing) {
+            boolean user1Solved = submissionRepository
+                .findByUserIdAndProblemIdAndContestIdAndVerdict(
+                    contest.getUser1Id(), contest.getProblem1Id(), contest.getId(), "OK")
+                .size() > 0;
+                
+            boolean user2Solved = submissionRepository
+                .findByUserIdAndProblemIdAndContestIdAndVerdict(
+                    contest.getUser2Id(), contest.getProblem2Id(), contest.getId(), "OK")
+                .size() > 0;
+            
+            // Если оба участника решили свои задачи, завершаем соревнование
+            if (user1Solved && user2Solved) {
+                System.out.println("🏁 Досрочно завершаем PvP #" + contest.getId() + " - оба участника решили задачи");
+                endMatchWithEvaluation(contest.getId());
+            }
+        }
     }
 
     public Optional<PvPContest> findOngoingById(Long contestId) {
@@ -176,39 +198,105 @@ public class PvPContestService {
         return repository.findById(contestId);
     }
 
-    public void endMatchWithEvaluation(Long contestId) {
+    public PvPContest endMatchWithEvaluation(Long contestId) {
         Optional<PvPContest> optional = repository.findById(contestId);
-        if (optional.isEmpty()) return;
+        if (optional.isEmpty()) return null;
+        
         PvPContest contest = optional.get();
-
-        List<Submission> submissions = submissionRepository.findByContestIdAndVerdict(contestId, "OK");
-
+        
+        if ("FINISHED".equals(contest.getStatus())) {
+            return contest;
+        }
+        
+        boolean user1Solved = submissionRepository
+            .findByUserIdAndProblemIdAndContestIdAndVerdict(
+                contest.getUser1Id(), contest.getProblem1Id(), contest.getId(), "OK")
+            .size() > 0;
+            
+        boolean user2Solved = submissionRepository
+            .findByUserIdAndProblemIdAndContestIdAndVerdict(
+                contest.getUser2Id(), contest.getProblem2Id(), contest.getId(), "OK")
+            .size() > 0;
+        
         Long winnerId = null;
-
-        if (submissions.size() == 1) {
-            winnerId = submissions.get(0).getUserId();
-        } else if (submissions.size() == 2) {
-            Submission s1 = submissions.get(0);
-            Submission s2 = submissions.get(1);
-
-            if (s1.getAttempt() < s2.getAttempt()) {
-                winnerId = s1.getUserId();
-            } else if (s2.getAttempt() < s1.getAttempt()) {
-                winnerId = s2.getUserId();
+        String resultDetails = "";
+        
+        if (user1Solved && !user2Solved) {
+            winnerId = contest.getUser1Id();
+            resultDetails = "Пользователь 1 решил задачу, Пользователь 2 - нет.";
+        } else if (!user1Solved && user2Solved) {
+            winnerId = contest.getUser2Id();
+            resultDetails = "Пользователь 2 решил задачу, Пользователь 1 - нет.";
+        } else if (user1Solved && user2Solved) {
+            int user1Attempts = submissionRepository
+                .countByUserIdAndProblemIdAndContestId(
+                    contest.getUser1Id(), contest.getProblem1Id(), contest.getId());
+                    
+            int user2Attempts = submissionRepository
+                .countByUserIdAndProblemIdAndContestId(
+                    contest.getUser2Id(), contest.getProblem2Id(), contest.getId());
+            
+            if (user1Attempts < user2Attempts) {
+                winnerId = contest.getUser1Id();
+                resultDetails = "Оба решили задачи, но Пользователь 1 сделал меньше попыток: " + 
+                    user1Attempts + " против " + user2Attempts;
+            } else if (user2Attempts < user1Attempts) {
+                winnerId = contest.getUser2Id();
+                resultDetails = "Оба решили задачи, но Пользователь 2 сделал меньше попыток: " + 
+                    user2Attempts + " против " + user1Attempts;
             } else {
-                // сравнение по времени
-                if (s1.getCreatedAt().isBefore(s2.getCreatedAt())) {
-                    winnerId = s1.getUserId();
+                LocalDateTime user1FirstSuccess = submissionRepository
+                    .findFirstByUserIdAndProblemIdAndContestIdAndVerdictOrderByCreatedAtAsc(
+                        contest.getUser1Id(), contest.getProblem1Id(), contest.getId(), "OK")
+                    .map(Submission::getCreatedAt)
+                    .orElse(null);
+                    
+                LocalDateTime user2FirstSuccess = submissionRepository
+                    .findFirstByUserIdAndProblemIdAndContestIdAndVerdictOrderByCreatedAtAsc(
+                        contest.getUser2Id(), contest.getProblem2Id(), contest.getId(), "OK")
+                    .map(Submission::getCreatedAt)
+                    .orElse(null);
+                
+                if (user1FirstSuccess != null && (user2FirstSuccess == null || user1FirstSuccess.isBefore(user2FirstSuccess))) {
+                    winnerId = contest.getUser1Id();
+                    resultDetails = "Оба решили задачи с одинаковым числом попыток, но Пользователь 1 был быстрее";
                 } else {
-                    winnerId = s2.getUserId();
+                    winnerId = contest.getUser2Id();
+                    resultDetails = "Оба решили задачи с одинаковым числом попыток, но Пользователь 2 был быстрее";
                 }
             }
+        } else {
+            resultDetails = "Ни один участник не решил свою задачу в отведенное время.";
         }
-
+        
         contest.setEndTime(LocalDateTime.now());
         contest.setStatus("FINISHED");
         contest.setWinnerId(winnerId);
-        repository.save(contest);
+        
+        PvPContest saved = repository.save(contest);
+        
+        notifyContestFinished(saved, resultDetails);
+        
+        return saved;
+    }
+
+    private void notifyContestFinished(PvPContest contest, String resultDetails) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("type", "CONTEST_FINISHED");
+            payload.put("contestId", contest.getId());
+            payload.put("status", contest.getStatus());
+            payload.put("winnerId", contest.getWinnerId());
+            payload.put("endTime", contest.getEndTime());
+            payload.put("resultDetails", resultDetails);
+            
+            messagingTemplate.convertAndSend("/topic/pvp-progress/" + contest.getId(), payload);
+            
+            System.out.println("🏆 PvP соревнование #" + contest.getId() + " завершено. " + 
+                (contest.getWinnerId() != null ? "Победитель: Пользователь #" + contest.getWinnerId() : "Ничья"));
+        } catch (Exception e) {
+            System.err.println("Ошибка при отправке уведомления о завершении: " + e.getMessage());
+        }
     }
 
     public PvPProgressResponse getProgress(Long userId, Long problemId, Long contestId, boolean isSubmit) {

@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
 
+import java.util.Map; 
+import java.util.HashMap; 
+
 @RestController
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RequestMapping("/api/pvp")
@@ -109,6 +112,30 @@ public class PvPController {
 
 
         return optional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/contest/{contestId}/result")
+    public ResponseEntity<?> getContestResult(@PathVariable Long contestId) {
+        return contestService.getContestById(contestId)
+            .map(contest -> {
+                Map<String, Object> result = new HashMap<>();
+                result.put("contestId", contest.getId());
+                result.put("status", contest.getStatus());
+                result.put("startTime", contest.getStartTime());
+                result.put("endTime", contest.getEndTime());
+                result.put("winnerId", contest.getWinnerId());
+                
+                boolean isFinished = "FINISHED".equals(contest.getStatus());
+                result.put("isFinished", isFinished);
+                
+                if (isFinished && contest.getWinnerId() != null) {
+                    boolean isUser1Winner = contest.getWinnerId().equals(contest.getUser1Id());
+                    result.put("winner", isUser1Winner ? "user1" : "user2");
+                }
+                
+                return ResponseEntity.ok(result);
+            })
+            .orElse(ResponseEntity.notFound().build()); 
     }
 
     @GetMapping("/progress")
