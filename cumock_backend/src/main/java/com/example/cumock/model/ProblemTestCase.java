@@ -1,5 +1,5 @@
 package com.example.cumock.model;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,6 +11,7 @@ public class ProblemTestCase {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id", nullable = false)
+    @JsonIgnore
     private Problem problem;
 
     @Column(columnDefinition = "TEXT", nullable = false)

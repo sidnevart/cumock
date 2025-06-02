@@ -40,7 +40,8 @@ public class CodeSandboxController {
     @PostMapping("/execute")
     public ResponseEntity<CodeExecutionResponse> executeCode(CodeExecutionRequest request) throws IOException, InterruptedException {
         try {
-            CodeResult result = executionService.execute(request.getCode(), request.getLanguage(), request.getInput());
+            // Fix parameter order
+            CodeResult result = executionService.execute(request.getCode(), request.getInput(), request.getLanguage());
             return ResponseEntity.ok(new CodeExecutionResponse(result));
         } catch(IOException | InterruptedException e){
             return ResponseEntity
@@ -54,12 +55,22 @@ public class CodeSandboxController {
     @PostMapping("/run")
     public ResponseEntity<RunResult> runCode(@RequestBody CodeRequest request) {
 
-
+        System.out.println("Running code for problem: " + request.getProblemId());
+    
         List<ProblemTestCase> samples = testCaseRepository.findByProblemIdAndIsSampleTrue(request.getProblemId());
+        System.out.println("Found " + samples.size() + " test cases");
+        
+        if (samples.isEmpty()) {
+            return ResponseEntity.badRequest().body(new RunResult(List.of(
+                new TestResult("", "", "No test cases found for this problem", false, 0L)
+            )));
+        }
+        
         List<TestResult> results = new ArrayList<>();
 
         for (ProblemTestCase testCase : samples) {
             try {
+                // Fix parameter order
                 CodeResult exec = executionService.execute(
                         request.getCode(),
                         testCase.getInput(),
@@ -98,12 +109,20 @@ public class CodeSandboxController {
 
     @PostMapping("/submit")
     public ResponseEntity<SubmissionResponse> submitCode(@RequestBody SubmissionRequest request) {
-
+        System.out.println("Submitting code for problem: " + request.getProblemId());
+        
+        List<ProblemTestCase> tests = testCaseRepository.findByProblemId(request.getProblemId());
+        System.out.println("Found " + tests.size() + " test cases for submission");
+        
+        if (tests.isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                new SubmissionResponse(0, 0, 0, "NO_TEST_CASES", 0)
+            );
+        }
         if (request.getPvp() != null && request.getPvp()) {
             progressPublisherService.publish(request.getContestId(), request.getProblemId(), request.getUserId(), true);
         }
 
-        List<ProblemTestCase> tests = testCaseRepository.findByProblemId(request.getProblemId());
         int passed = 0;
         int failed = 0;
         long totalTime = 0;

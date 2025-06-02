@@ -8,6 +8,7 @@ import com.example.cumock.dto.admin.UserAdminResponse;
 import com.example.cumock.dto.problem.PaginatedResponse;
 import com.example.cumock.dto.problem.ProblemResponse;
 import com.example.cumock.dto.problem.UpdateProblemRequest;
+import com.example.cumock.dto.problem.ProblemTestCaseResponse;
 import com.example.cumock.model.Problem;
 import com.example.cumock.model.ProblemTestCase;
 import com.example.cumock.model.User;
@@ -76,6 +77,9 @@ public class AdminController {
         problem.setDescription(request.getDescription());
         problem.setDifficulty(request.getDifficulty());
         problem.setTopic(request.getTopic());
+        problem.setInputFormat(request.getInputFormat());  // Added
+        problem.setOutputFormat(request.getOutputFormat()); // Added
+        problem.setExamples(request.getExamples()); 
         problemRepository.save(problem);
         return ResponseEntity.ok().build();
     }
@@ -149,7 +153,9 @@ public class AdminController {
         problem.setDescription(request.getDescription());
         problem.setDifficulty(request.getDifficulty());
         problem.setTopic(request.getTopic());
-
+        problem.setInputFormat(request.getInputFormat());  // Added
+        problem.setOutputFormat(request.getOutputFormat()); // Added
+        problem.setExamples(request.getExamples()); 
         problemRepository.save(problem);
         return ResponseEntity.ok().build();
     }
@@ -164,6 +170,15 @@ public class AdminController {
         return ResponseEntity.noContent().build(); // 204
     }
 
+    @GetMapping("/problems/{problemId}/tests")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ProblemTestCaseResponse>> getProblemTestCases(@PathVariable Long problemId) {
+        List<ProblemTestCase> testCases = testCaseRepository.findByProblemId(problemId);
+        List<ProblemTestCaseResponse> response = testCases.stream()
+            .map(tc -> new ProblemTestCaseResponse(tc.getId(), tc.getInput(), tc.getExpectedOutput(), tc.isSample(), tc.isPvp()))
+            .toList();
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/problems/{problemId}/tests")
     @PreAuthorize("hasRole('ADMIN')")

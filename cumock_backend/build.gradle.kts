@@ -46,8 +46,9 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
+	implementation("com.fasterxml.jackson.core:jackson-databind")
 
-
+	implementation ("com.vladmihalcea:hibernate-types-60:2.21.1")
 
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql:10.4.1")

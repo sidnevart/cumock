@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import problemService from '../api/problems';
@@ -101,34 +102,76 @@ function ProblemDetailsPage() {
   };
 
   const handleRunCode = async () => {
-    try {
-      setOutput('');
-      setError('');
-      const response = await codeService.runCode({
-        code,
-        language,
-        problemId: id
+  try {
+    setOutput('');
+    setError('');
+    const response = await codeService.runCode(
+      user.id,
+      id,
+      language,
+      code
+    );
+    
+    if (response.data && response.data.results) {
+      const results = response.data.results;
+      let outputText = '';
+      
+      results.forEach((result, index) => {
+        outputText += `--- Test Case ${index + 1} ---\n`;
+        outputText += `Input:\n${result.input}\n\n`;
+        outputText += `Your Output:\n${result.output}\n\n`;
+        outputText += `Expected Output:\n${result.expected}\n\n`;
+        outputText += `Status: ${result.passed ? 'PASSED ✅' : 'FAILED ❌'}\n`;
+        outputText += `Execution Time: ${result.executionTimeMillis}ms\n\n`;
       });
-      setOutput(response.data.output || 'No output');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to run code');
+      
+      const passedCount = results.filter(r => r.passed).length;
+      outputText += `Summary: ${passedCount}/${results.length} test cases passed\n`;
+      
+      setOutput(outputText);
+    } else {
+      setOutput('No test results returned');
     }
-  };
+  } catch (err) {
+    setError(err.response?.data?.message || 'Failed to run code');
+  }
+};
 
-  const handleSubmitCode = async () => {
-    try {
-      setOutput('');
-      setError('');
-      const response = await codeService.submitCode({
-        code,
-        language,
-        problemId: id
-      });
-      setOutput(response.data.message || 'Submission successful');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit code');
+const handleSubmitCode = async () => {
+  try {
+    setOutput('');
+    setError('');
+    const response = await codeService.submitCode(
+      user.id,
+      id,
+      language,
+      code
+    );
+    
+    let outputText = '';
+    
+    if (response.data) {
+      const result = response.data;
+      outputText += `Submission Results:\n\n`;
+      outputText += `Tests Passed: ${result.passed}/${result.total}\n`;
+      outputText += `Tests Failed: ${result.failed}/${result.total}\n`;
+      outputText += `Verdict: ${result.verdict}\n`;
+      outputText += `Execution Time: ${result.executionTimeMillis}ms\n`;
+      
+      if (result.verdict === "OK") {
+        outputText += `\n🎉 Congratulations! Your solution passed all test cases.`;
+      } else {
+        outputText += `\n⚠️ Your solution didn't pass all test cases. Please try again.`;
+      }
     }
-  };
+    
+    setOutput(outputText);
+  } catch (err) {
+    setError(err.response?.data?.message || 'Failed to submit code');
+  }
+};
+
+
 
   const getMonacoLanguage = (lang) => {
     switch (lang) {
@@ -174,7 +217,7 @@ function ProblemDetailsPage() {
         <h1>{problem.title}</h1>
         <div className="problem-meta">
           <span className="difficulty">Difficulty: {problem.difficulty}</span>
-          <span className="category">Category: {problem.category}</span>
+          <span className="category">Category: {problem.topic}</span>
         </div>
       </div>
 

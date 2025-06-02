@@ -22,7 +22,10 @@ function ProblemManagement() {
     title: '',
     description: '',
     difficulty: 'EASY',
-    topic: ''
+    topic: '',
+    inputFormat: '',
+    outputFormat: '',
+    examples: [{ input: '', output: '' }]
   });
 
   // Check if user is admin
@@ -89,7 +92,10 @@ function ProblemManagement() {
       title: '',
       description: '',
       difficulty: 'EASY',
-      topic: ''
+      topic: '',
+      inputFormat: '',
+      outputFormat: '',
+      examples: [{ input: '', output: '' }]
     });
     setShowCreateForm(true);
   };
@@ -100,7 +106,12 @@ function ProblemManagement() {
       title: problem.title,
       description: problem.description || '',
       difficulty: problem.difficulty,
-      topic: problem.topic
+      topic: problem.topic,
+      inputFormat: problem.inputFormat || '',
+      outputFormat: problem.outputFormat || '',
+      examples: problem.examples?.length > 0 
+        ? problem.examples 
+        : [{ input: '', output: '' }]
     });
     setShowCreateForm(true);
   };
@@ -230,7 +241,81 @@ function ProblemManagement() {
                   required
                 />
               </div>
-              
+
+              <div className="form-group">
+                <label>Input Format:</label>
+                <textarea
+                  name="inputFormat"
+                  value={formData.inputFormat}
+                  onChange={handleInputChange}
+                  rows="4"
+                ></textarea>
+              </div>
+
+              <div className="form-group">
+                <label>Output Format:</label>
+                <textarea
+                  name="outputFormat"
+                  value={formData.outputFormat}
+                  onChange={handleInputChange}
+                  rows="4"
+                ></textarea>
+              </div>
+              <div className="form-group">
+                <label>Examples:</label>
+                {formData.examples.map((example, index) => (
+                  <div key={index} className="example-row">
+                    <div>
+                      <label>Input #{index + 1}:</label>
+                      <textarea
+                        value={example.input}
+                        onChange={(e) => {
+                          const newExamples = [...formData.examples];
+                          newExamples[index].input = e.target.value;
+                          setFormData({ ...formData, examples: newExamples });
+                        }}
+                        rows="3"
+                      ></textarea>
+                    </div>
+                    <div>
+                      <label>Output #{index + 1}:</label>
+                      <textarea
+                        value={example.output}
+                        onChange={(e) => {
+                          const newExamples = [...formData.examples];
+                          newExamples[index].output = e.target.value;
+                          setFormData({ ...formData, examples: newExamples });
+                        }}
+                        rows="3"
+                      ></textarea>
+                    </div>
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        className="admin-btn-small danger"
+                        onClick={() => {
+                          const newExamples = formData.examples.filter((_, i) => i !== index);
+                          setFormData({ ...formData, examples: newExamples });
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="admin-btn-small"
+                  onClick={() => {
+                    setFormData({
+                      ...formData,
+                      examples: [...formData.examples, { input: '', output: '' }]
+                    });
+                  }}
+                >
+                  Add Example
+                </button>
+              </div>
               <div className="form-actions">
                 <button type="submit" className="admin-btn">
                   {editingProblem ? 'Update Problem' : 'Create Problem'}

@@ -1,10 +1,15 @@
 package com.example.cumock.dto.problem;
+import java.util.List;
+import com.example.cumock.model.ProblemExample;
 
 public class CreateProblemRequest {
     private String title;
     private String description;
     private String difficulty; // "easy", "medium", "hard"
     private String topic;
+    private String inputFormat;
+    private String outputFormat;
+    private List<ProblemExample> examples;
 
     // getters and setters
     public String getTitle() {
@@ -30,5 +35,29 @@ public class CreateProblemRequest {
     }
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public String getInputFormat() {
+        return inputFormat;
+    }
+    
+    public void setInputFormat(String inputFormat) {
+        this.inputFormat = inputFormat;
+    }
+    
+    public String getOutputFormat() {
+        return outputFormat;
+    }
+    
+    public void setOutputFormat(String outputFormat) {
+        this.outputFormat = outputFormat;
+    }
+    
+    public List<ProblemExample> getExamples() {
+        return examples;
+    }
+    
+    public void setExamples(List<ProblemExample> examples) {
+        this.examples = examples;
     }
 }
