@@ -56,8 +56,9 @@ public class CodeSandboxController {
     public ResponseEntity<RunResult> runCode(@RequestBody CodeRequest request) {
 
         System.out.println("Running code for problem: " + request.getProblemId());
-    
-        List<ProblemTestCase> samples = testCaseRepository.findByProblemIdAndIsSampleTrue(request.getProblemId());
+        System.out.println("[runCode] Fetching test cases for problemId: " + request.getProblemId());
+        List<ProblemTestCase> samples = testCaseRepository.findByProblemId(request.getProblemId());
+
         System.out.println("Found " + samples.size() + " test cases");
         
         if (samples.isEmpty()) {
@@ -70,12 +71,16 @@ public class CodeSandboxController {
 
         for (ProblemTestCase testCase : samples) {
             try {
+                System.out.println("[runCode] TestCase id: " + testCase.getId() + ", input: " + testCase.getInput());
                 // Fix parameter order
+                System.out.println("Code: " + request.getCode());
+                System.out.println("Input: " + testCase.getInput());
                 CodeResult exec = executionService.execute(
                         request.getCode(),
                         testCase.getInput(),
                         request.getLanguage()
                 );
+                System.out.println("Exec output: " + exec.getOutput());
                 boolean passed = exec.getOutput().trim().equals(testCase.getOutput().trim());
                 results.add(new TestResult(
                         testCase.getInput(),
@@ -104,6 +109,22 @@ public class CodeSandboxController {
             runResultCache.savePassed(request.getUserId(), request.getProblemId(), request.getContestId(), passed);
             progressPublisherService.publish(request.getContestId(), request.getProblemId(), request.getUserId(), false);
         }
+        List<ProblemTestCase> tests = testCaseRepository.findByProblemIdAndIsPvpTrue(request.getProblemId());
+
+        System.out.println("PvP tests loaded: " + tests.size());
+        for (ProblemTestCase t : tests) {
+            System.out.println("Test input: " + t.getInput());
+        }
+
+        for (TestResult result : results) {
+            System.out.println("=== TestResult ===");
+            System.out.println("Input: " + result.getInput());
+            System.out.println("Output: " + result.getOutput());
+            System.out.println("Expected: " + result.getExpected());
+            System.out.println("Passed: " + result.isPassed());
+        }
+
+
         return ResponseEntity.ok(new RunResult(results));
     }
 
@@ -112,6 +133,7 @@ public class CodeSandboxController {
         System.out.println("Submitting code for problem: " + request.getProblemId());
         
         List<ProblemTestCase> tests = testCaseRepository.findByProblemId(request.getProblemId());
+
         System.out.println("Found " + tests.size() + " test cases for submission");
         
         if (tests.isEmpty()) {

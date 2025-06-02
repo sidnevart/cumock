@@ -35,4 +35,8 @@ public class UserService {
         User currentUser = getCurrentUser();
         return currentUser.getRole().equals("ADMIN");
     }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
 }

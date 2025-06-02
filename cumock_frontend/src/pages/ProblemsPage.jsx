@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import problemService from '../api/problems';
 import { Link } from 'react-router-dom';
 import './ProblemsPage.css';
+import { useAuth } from '../context/AuthContext';
 
 function ProblemsPage() {
   const [problems, setProblems] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [solvedProblemIds, setSolvedProblemIds] = useState(new Set());
   const [filters, setFilters] = useState({
     page: 0,
     size: 10,
@@ -16,10 +19,21 @@ function ProblemsPage() {
     difficulty: '',
   });
   const [error, setError] = useState('');
-
+  const fetchSolvedProblems = async () => {
+    if (!user || !user.id) return;
+    
+    try {
+      const response = await problemService.getSolvedProblems(user.id);
+      setSolvedProblemIds(new Set(response.data));
+    } catch (error) {
+      console.error('Error fetching solved problems:', error);
+    }
+  };
   useEffect(() => {
     fetchProblems();
-  }, [filters]);
+    fetchSolvedProblems();
+  }, [filters, user?.id]);
+
 
   const fetchProblems = async () => {
     setLoading(true);
@@ -96,12 +110,13 @@ function ProblemsPage() {
 
       <div className="problems-list">
         {problems.map((problem) => (
-          <div key={problem.id} className="problem-item">
+          <div key={problem.id} className={`problem-item ${solvedProblemIds.has(problem.id) ? 'solved' : ''}`}>
             <Link to={`/problems/${problem.id}`}>
               <h2>{problem.title}</h2>
               <div className="problem-meta">
                 <span>Difficulty: {problem.difficulty}</span>
                 <span>Topic: {problem.topic}</span>
+                {solvedProblemIds.has(problem.id) && <span className="solved-badge">✓ Решено</span>}
               </div>
             </Link>
           </div>

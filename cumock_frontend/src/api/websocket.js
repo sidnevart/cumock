@@ -6,37 +6,38 @@ class WebSocketService {
     this.stompClient = null;
     this.subscriptions = new Map();
   }
-
   connect() {
-    if (this.stompClient && this.stompClient.connected) {
-      return Promise.resolve();
-    }
-
     return new Promise((resolve, reject) => {
-      const socket = new SockJS('http://localhost:8080/ws');
+      if (this.stompClient && this.stompClient.connected) {
+        resolve();
+        return;
+      }
+
+      // Create simple connection without token parameter
+      const socket = new SockJS(`http://localhost:8080/ws?token=${localStorage.getItem('user_token')}`);
+
+      
       this.stompClient = new Client({
         webSocketFactory: () => socket,
-        debug: (str) => {
-          console.log(str);
-        },
-        reconnectDelay: 5000,
-        heartbeatIncoming: 4000,
-        heartbeatOutgoing: 4000,
+        debug: process.env.NODE_ENV === 'development' ? console.log : null,
+        reconnectDelay: 5000
       });
 
       this.stompClient.onConnect = () => {
-        console.log('Connected to WebSocket');
+        console.log('WebSocket connected successfully');
         resolve();
       };
 
-      this.stompClient.onStompError = (frame) => {
-        console.error('STOMP error:', frame);
-        reject(frame);
+      this.stompClient.onStompError = (error) => {
+        console.error('WebSocket error:', error);
+        reject(error);
       };
 
       this.stompClient.activate();
     });
   }
+
+    
 
   disconnect() {
     if (this.stompClient) {

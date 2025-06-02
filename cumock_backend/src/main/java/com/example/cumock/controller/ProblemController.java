@@ -17,6 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import com.example.cumock.model.Submission;
+import com.example.cumock.repository.SubmissionRepository;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
@@ -28,8 +31,10 @@ public class ProblemController {
     private final ProblemRepository problemRepository;
 
     private final ProblemTestCaseRepository testCaseRepository;
+    private final SubmissionRepository submissionRepository;
 
-    public ProblemController(ProblemRepository problemRepository, ProblemTestCaseRepository testCaseRepository) {
+    public ProblemController(ProblemRepository problemRepository, ProblemTestCaseRepository testCaseRepository, SubmissionRepository submissionRepository) {
+        this.submissionRepository = submissionRepository;
         this.problemRepository = problemRepository;
         this.testCaseRepository = testCaseRepository;
     }
@@ -142,6 +147,17 @@ public class ProblemController {
         }
         problemRepository.deleteById(id);
         return ResponseEntity.noContent().build(); // 204
+    }
+
+    @GetMapping("/user/{userId}/solved")
+    public ResponseEntity<List<Long>> getSolvedProblems(@PathVariable Long userId) {
+        List<Long> solvedProblemIds = submissionRepository.findByUserIdAndVerdict(userId, "OK")
+            .stream()
+            .map(Submission::getProblemId)
+            .distinct()
+            .collect(Collectors.toList());
+            
+        return ResponseEntity.ok(solvedProblemIds);
     }
 
 

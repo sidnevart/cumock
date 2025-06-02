@@ -27,10 +27,18 @@ const checkIfAdmin = () => {
   });
 };
 
+
+const getUserById = (userId) => {
+  return axios.get(`${API_URL}/${userId}`, {
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('user_token') }
+  });
+};
+
 const userService = {
   searchUsers,
   getCurrentUser,
-  checkIfAdmin
+  checkIfAdmin,
+  getUserById
 };
 
 export default userService;

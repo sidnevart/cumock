@@ -14,7 +14,7 @@ function PvPContestPage() {
   const { contestId } = useParams();
   const { user } = useAuth();
   const userId = user?.id;
-
+  const [now, setNow] = useState(new Date());
   const [contest, setContest] = useState(null);
   const [problem1, setProblem1] = useState(null); // Задача Challenger'а
   const [problem2, setProblem2] = useState(null); // Задача Challenged'а
@@ -54,12 +54,82 @@ public class Solution {
 }`
   };
 
-  const handleLanguageChange = (newLanguage) => {
-    setLanguage(newLanguage);
-    if (!code.trim()) {  // Only set default template if the editor is empty
-      setCode(defaultTemplates[newLanguage]);
+  const PlayerProgress = ({ isYou, playerData, problemData }) => {
+    const progressPercent = playerData?.total ? (playerData.passed / playerData.total) * 100 : 0;
+    
+    return (
+      <div className={`player-progress ${isYou ? 'you' : 'opponent'}`}>
+        <h4>{isYou ? 'Вы' : 'Противник'}</h4>
+        <div className="problem-info">
+          <span className="problem-title">{problemData?.title || 'Загрузка...'}</span>
+          <span className="problem-difficulty">{problemData?.difficulty || ''}</span>
+        </div>
+        
+        <div className="progress-stats">
+          <div className="progress-bar-container">
+            <div 
+              className="progress-bar" 
+              style={{ width: `${progressPercent}%` }}
+              title={`${playerData?.passed || 0}/${playerData?.total || 0} тестов`}
+            ></div>
+          </div>
+          <span className="progress-text">
+            Пройдено тестов: {playerData?.passed || 0}/{playerData?.total || 0}
+          </span>
+        </div>
+        
+        <div className="player-stats">
+          <div className="stat-item">
+            <span className="stat-label">Попыток:</span>
+            <span className="stat-value">{playerData?.attempts || 0}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Статус:</span>
+            <span className={`stat-value ${playerData?.solved ? 'solved' : ''}`}>
+              {playerData?.solved ? '✅ Решено' : '⏳ В процессе'}
+            </span>
+          </div>
+          {playerData?.lastSubmissionTime && (
+            <div className="stat-item">
+              <span className="stat-label">Последняя отправка:</span>
+              <span className="stat-value">
+                {new Date(playerData.lastSubmissionTime).toLocaleTimeString()}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const handleLanguageChange = (e) => {
+    const newLang = e.target.value;
+    setLanguage(newLang);
+    if (!code.trim()) {
+      setCode(getInitialCode(newLang, ''));
     }
   };
+
+    function formatTimeLeft(contest) {
+      if (!contest || !contest.startTime) return "Time unknown";
+      
+      const startTime = new Date(contest.startTime);
+      const endTime = new Date(startTime.getTime() + 30 * 60 * 1000);
+      
+      const diffMs = endTime - now;
+      if (diffMs <= 0) return "Time expired";
+
+      const minutes = Math.floor(diffMs / 60000);
+      const seconds = Math.floor((diffMs % 60000) / 1000);
+      const isUrgent = minutes < 5;
+      
+      return (
+        <span className={`time-left ${isUrgent ? 'urgent' : ''}`}>
+          {minutes}м {seconds}с
+        </span>
+      );
+    }
+
 
   useEffect(() => {
     if (!userId || !contestId) return;
@@ -71,8 +141,10 @@ public class Solution {
 
         // Subscribe to contest progress updates
         websocketService.subscribe(`/topic/pvp-progress/${contestId}`, (data) => {
+          console.log("[PvPContestPage] WebSocket message:", data);
           setPvpProgress(data);
         });
+
       } catch (error) {
         console.error('Failed to connect to WebSocket:', error);
       }
@@ -80,17 +152,21 @@ public class Solution {
 
     setupWebSocket();
     fetchContestData();
-
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
     // Cleanup function
     return () => {
       websocketService.unsubscribe(`/topic/pvp-progress/${contestId}`);
       websocketService.disconnect();
+      clearInterval(interval);
     };
   }, [contestId, userId]);
 
   const fetchContestData = async () => {
     setLoading(true);
     try {
+    
       const contestResponse = await pvpService.getContestDetails(contestId); // Нужен новый эндпоинт на бекенде для получения деталей контеста по ID
       setContest(contestResponse.data);
 
@@ -138,47 +214,90 @@ public class Solution {
     }
   };
 
+  // Replace the banner code with a cleaner approach
   const handleRunCode = async () => {
-    if (!userId || !userProblemId || !contestId) { // Проверяем необходимые данные
-        alert("Недостаточно данных для запуска кода в матче.");
-        return;
-    }
-    setLoading(true); // Возможно, лучше использовать отдельное состояние для загрузки запуска
-    setRunResults(null);
-    setSubmissionResult(null);
     try {
       setOutput('');
       setError('');
-      const response = await codeService.runCode(userId, userProblemId, language, code, contestId); // Передаем contestId
-      setRunResults(response.data);
-      setOutput(response.data.output || 'No output');
-    } catch (error) {
-      console.error('Error running code:', error);
-      setError(error.response?.data?.message || 'Failed to run code');
+      setRunResults(null);
+      setLoading(true);
+      console.log('CODE: ', code);
+      const response = await codeService.runCode(
+        userId,
+        userProblemId,
+        language,
+        code,
+        contestId
+      );
+      
+      // Process results and show them in the output area
+      if (response.data && response.data.results) {
+        const results = response.data.results;
+        let outputText = '';
+        
+        results.forEach((result, index) => {
+          outputText += `--- Test Case ${index + 1} ---\n`;
+          outputText += `Input:\n${result.input || ''}\n\n`;
+          outputText += `Your Output:\n${result.output || ''}\n\n`;
+          outputText += `Expected Output:\n${result.expected || ''}\n\n`;
+          outputText += `Status: ${result.passed ? 'PASSED ✅' : 'FAILED ❌'}\n`;
+          outputText += `Execution Time: ${result.executionTimeMillis || 0}ms\n\n`;
+        });
+        
+        const passedCount = results.filter(r => r.passed).length;
+        outputText += `Summary: ${passedCount}/${results.length} test cases passed\n`;
+        
+        setOutput(outputText);
+        setRunResults(response.data);
+      } else {
+        setOutput(response.data?.output || 'No output or test results returned');
+      }
+    } catch (err) {
+      console.error('Error running code:', err);
+      setError(err.response?.data?.message || 'Failed to run code');
     } finally {
-      setLoading(false); // Сброс состояния загрузки
+      setLoading(false);
     }
   };
 
   const handleSubmitCode = async () => {
-     if (!userId || !userProblemId || !contestId) { // Проверяем необходимые данные
-        alert("Недостаточно данных для отправки решения в матче.");
-        return;
-    }
-    setIsSubmitting(true);
-    setRunResults(null);
-    setSubmissionResult(null);
     try {
       setOutput('');
       setError('');
-      const response = await codeService.submitCode(userId, userProblemId, language, code, contestId); // Передаем contestId
-      setSubmissionResult(response.data);
-      setOutput(response.data.message || 'Submission successful');
-      // При успешной отправке, возможно, обновить состояние матча или ждать обновления через WebSockets
-    } catch (error) {
-      console.error('Error submitting code:', error);
-      setError(error.response?.data?.message || 'Failed to submit code');
-      // Обработка ошибок отправки
+      setSubmissionResult(null);
+      setIsSubmitting(true);
+      
+      const response = await codeService.submitCode(
+        userId,
+        userProblemId,
+        language,
+        code,
+        contestId  // Передаём ID соревнования
+      );
+      
+      let outputText = '';
+      
+      if (response.data) {
+        const result = response.data;
+        setSubmissionResult(result);
+        
+        outputText += `Submission Results:\n\n`;
+        outputText += `Tests Passed: ${result.passed}/${result.total}\n`;
+        outputText += `Tests Failed: ${result.failed}/${result.total}\n`;
+        outputText += `Verdict: ${result.verdict}\n`;
+        outputText += `Execution Time: ${result.executionTimeMillis || 0}ms\n`;
+        
+        if (result.verdict === "OK") {
+          outputText += `\n🎉 Поздравляем! Ваше решение прошло все тесты.`;
+        } else {
+          outputText += `\n⚠️ Ваше решение не прошло все тесты. Пожалуйста, попробуйте снова.`;
+        }
+      }
+      
+      setOutput(outputText);
+    } catch (err) {
+      console.error('Error submitting code:', err);
+      setError(err.response?.data?.message || 'Failed to submit code');
     } finally {
       setIsSubmitting(false);
     }
@@ -218,16 +337,52 @@ public class Solution {
   const opponentProblem = contest.user2Id === userId ? problem1 : problem2;
 
   return (
+
+
     <div className="pvp-contest">
+        {contest.status !== 'ONGOING' && (
+          <div className="contest-ended-banner">
+            <div className="banner-content">
+              <h2>Соревнование завершено</h2>
+              <p className="winner-info">
+                {contest.winnerId ? 
+                  (contest.winnerId === userId ? 
+                    "Поздравляем! Вы победили в этом соревновании." : 
+                    "К сожалению, вы проиграли в этом соревновании.") : 
+                  "Соревнование завершилось без определения победителя."
+                }
+              </p>
+              <p className="contest-status">Статус: {contest.status}</p>
+            </div>
+          </div>
+        )}
       <div className="contest-header">
         <h1>PvP Матч #{contest.id}</h1>
         <div className="contest-meta">
           <span className="status">Статус: {contest.status}</span>
           {!wsConnected && <p className="text-warning">Подключение к серверу обновлений...</p>}
         </div>
+        <span className="time-left">Осталось: {formatTimeLeft(contest)}</span>
       </div>
 
       <div className="contest-content">
+        {pvpProgress && (
+          <div className="progress-section">
+            <h3>Прогресс соревнования</h3>
+            <div className="progress-container">
+              <PlayerProgress 
+                isYou={contest.user1Id === userId}
+                playerData={pvpProgress.user1Progress}
+                problemData={contest.user1Id === userId ? yourProblem : opponentProblem}
+              />
+              <PlayerProgress 
+                isYou={contest.user2Id === userId}
+                playerData={pvpProgress.user2Progress}
+                problemData={contest.user2Id === userId ? yourProblem : opponentProblem}
+              />
+            </div>
+          </div>
+        )}
         <div className="problem-section">
           <h2>Ваша задача ({challenger === 'Вы' ? problem1?.title : problem2?.title})</h2>
           {yourProblem && (
@@ -279,8 +434,12 @@ public class Solution {
               <option value="java">Java</option>
             </select>
             <div className="editor-buttons">
-              <button onClick={handleRunCode} disabled={loading}>Run Code</button>
-              <button onClick={handleSubmitCode} disabled={isSubmitting}>Submit</button>
+              <button onClick={handleRunCode} disabled={loading || contest.status !== 'ONGOING'}>
+                Run Code
+              </button>
+              <button onClick={handleSubmitCode} disabled={isSubmitting || contest.status !== 'ONGOING'}>
+                Submit
+              </button>
             </div>
           </div>
 
@@ -290,7 +449,7 @@ public class Solution {
               defaultLanguage={getMonacoLanguage(language)}
               language={getMonacoLanguage(language)}
               value={code}
-              onChange={setCode}
+              onChange={contest.status === 'ONGOING' ? setCode : () => {}}
               theme="vs-dark"
               options={{
                 minimap: { enabled: false },
@@ -299,6 +458,7 @@ public class Solution {
                 roundedSelection: false,
                 scrollBeyondLastLine: false,
                 automaticLayout: true,
+                readOnly: contest.status !== 'ONGOING' // Блокировать ввод если не ONGOING
               }}
             />
           </div>
@@ -310,28 +470,7 @@ public class Solution {
           </div>
         </div>
 
-        {runResults && runResults.results && runResults.results.length > 0 && (
-          <div className="results-section">
-            <h3>Результаты выполнения (Sample Tests):</h3>
-            {runResults.results.map((result, index) => (
-              <div key={index} className={`test-result ${result.passed ? 'passed' : 'failed'}`}>
-                <p>Input: {result.input}</p>
-                <p>Your Output: {result.yourOutput}</p>
-                <p>Expected Output: {result.expectedOutput}</p>
-                <p>Passed: {result.passed ? 'Yes' : 'No'}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {submissionResult && (
-          <div className="results-section">
-            <h3>Результаты отправки:</h3>
-            <p>Вердикт: {submissionResult.verdict}</p>
-            <p>Пройдено тестов: {submissionResult.passed}/{submissionResult.total}</p>
-            <p>Время выполнения: {submissionResult.totalTime}ms</p>
-          </div>
-        )}
+        
 
         {contest.status !== 'ONGOING' && (
             <div>

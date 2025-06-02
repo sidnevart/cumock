@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
@@ -79,20 +80,34 @@ public class PvPController {
         }
     }
 
-    @GetMapping("/challenges")
-    public ResponseEntity<List<PvPContest>> getChallenges(
-            @RequestParam Long userId,
-            @RequestParam(defaultValue = "CHALLENGE") String status
-    ) {
-        List<PvPContest> challenges = contestRepository.findAllByStatus(status).stream()
-                .filter(contest -> contest.getUser1Id().equals(userId) || contest.getUser2Id().equals(userId))
-                .toList();
-        return ResponseEntity.ok(challenges);
-    }
+        @GetMapping("/challenges")
+        public ResponseEntity<List<PvPContest>> getChallenges(
+                @RequestParam Long userId,
+                @RequestParam(defaultValue = "CHALLENGE") String status
+        ) {
+            try {
+                List<PvPContest> user1Challenges = contestRepository.findByUser1IdAndStatus(userId, status);
+                List<PvPContest> user2Challenges = contestRepository.findByUser2IdAndStatus(userId, status);
+                
+                List<PvPContest> allChallenges = new ArrayList<>();
+                allChallenges.addAll(user1Challenges);
+                allChallenges.addAll(user2Challenges);
+                
+                System.out.println("Found " + allChallenges.size() + " challenges for user " + userId);
+                return ResponseEntity.ok(allChallenges);
+            } catch (Exception e) {
+                System.err.println("Error fetching challenges: " + e.getMessage());
+                return ResponseEntity.status(500).build();
+            }
+        }
 
     @GetMapping("/contest/{contestId}")
     public ResponseEntity<PvPContest> getContestDetails(@PathVariable Long contestId) {
         Optional<PvPContest> optional = contestService.getContestById(contestId);
+        // получи pvp тесты через repository 
+        // List<ProblemTestCase> testCases = testCaseRepository.findPvpTestCasesByProblemId(contestId);
+
+
         return optional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 

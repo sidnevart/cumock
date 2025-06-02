@@ -58,32 +58,44 @@ public class PvPContestService {
     }
 
     public PvPContest createChallenge(Long challengerId, Long challengedId) {
-        // Проверяем, что оба пользователя не участвуют в активных контестах
-        Optional<PvPContest> existingContest = repository.findFirstByUser1IdOrUser2IdAndStatus(
-                challengerId, challengerId, "ONGOING");
+        // Check if challenger is in an active contest
+        Optional<PvPContest> existingContest = repository.findFirstByUser1IdAndStatus(challengerId, "ONGOING");
+        if (existingContest.isEmpty()) {
+            existingContest = repository.findFirstByUser2IdAndStatus(challengerId, "ONGOING");
+        }
+        
         if (existingContest.isPresent()) {
             throw new IllegalStateException("Challenger is already in an active contest");
         }
 
-        existingContest = repository.findFirstByUser1IdOrUser2IdAndStatus(
-                challengedId, challengedId, "ONGOING");
+        // Check if challenged user is in an active contest
+        existingContest = repository.findFirstByUser1IdAndStatus(challengedId, "ONGOING");
+        if (existingContest.isEmpty()) {
+            existingContest = repository.findFirstByUser2IdAndStatus(challengedId, "ONGOING");
+        }
+        
         if (existingContest.isPresent()) {
             throw new IllegalStateException("Challenged user is already in an active contest");
         }
 
-        // Получаем случайные задачи для каждого пользователя
-        Long problem1Id = getRandomProblemId();
-        Long problem2Id = getRandomProblemId();
+        // Get random problems for each user
+        try {
+            Long problem1Id = getRandomProblemId();
+            Long problem2Id = getRandomProblemId();
 
-        PvPContest contest = new PvPContest();
-        contest.setUser1Id(challengerId);
-        contest.setUser2Id(challengedId);
-        contest.setProblem1Id(problem1Id);
-        contest.setProblem2Id(problem2Id);
-        contest.setStartTime(LocalDateTime.now());
-        contest.setStatus("CHALLENGE");
-        contest.setChallengeExpiresAt(LocalDateTime.now().plusMinutes(CHALLENGE_EXPIRY_MINUTES));
-        return repository.save(contest);
+            PvPContest contest = new PvPContest();
+            contest.setUser1Id(challengerId);
+            contest.setUser2Id(challengedId);
+            contest.setProblem1Id(problem1Id);
+            contest.setProblem2Id(problem2Id);
+            contest.setStartTime(LocalDateTime.now());
+            contest.setStatus("CHALLENGE");
+            contest.setChallengeExpiresAt(LocalDateTime.now().plusMinutes(CHALLENGE_EXPIRY_MINUTES));
+            return repository.save(contest);
+        } catch (Exception e) {
+            System.err.println("Error creating challenge: " + e.getMessage());
+            throw new IllegalStateException("Failed to create challenge: " + e.getMessage());
+        }
     }
 
     private Long getRandomProblemId() {

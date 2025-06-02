@@ -13,7 +13,9 @@ public interface PvPContestRepository extends JpaRepository<PvPContest, Long> {
     Optional<PvPContest> findByIdAndStatus(Long id, String status);
 
     List<PvPContest> findAllByStatus(String status);
+    List<PvPContest> findByUser1IdAndStatus(Long userId, String status);
+    List<PvPContest> findByUser2IdAndStatus(Long userId, String status);
 
-
-    Optional<PvPContest> findFirstByUser1IdOrUser2IdAndStatus(Long user1Id, Long user2Id, String status);
+    Optional<PvPContest> findFirstByUser1IdAndStatus(Long user1Id, String status);
+    Optional<PvPContest> findFirstByUser2IdAndStatus(Long user2Id, String status);
 }

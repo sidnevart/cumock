@@ -61,8 +61,8 @@ public class CodeExecutionService {
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
             writer.write(input);
+            writer.newLine();  // Добавляет \n
             writer.flush();
-
         }
 
         long start = System.currentTimeMillis();
@@ -76,6 +76,11 @@ public class CodeExecutionService {
 
         String output = new String(process.getInputStream().readAllBytes());
         String err = new String(process.getErrorStream().readAllBytes());
+
+        System.out.println("=== RAW OUTPUT ===");
+        System.out.println(output);
+        System.out.println("=== RAW ERR ===");
+        System.out.println(err);
         return new CodeResult(output, err, process.exitValue(), end - start);
     }
 }

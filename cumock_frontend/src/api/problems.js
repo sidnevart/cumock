@@ -12,6 +12,12 @@ const getPagedProblems = (page = 0, size = 10, sortBy = 'id') => {
   });
 };
 
+
+const getSolvedProblems = (userId) => {
+  return axiosInstance.get(`/api/problems/user/${userId}/solved`);
+};
+
+
 // Function to get problem details - ИЗМЕНЕНО! Использует правильный endpoint
 const getProblemById = (id) => {
   console.log('Token used for problem fetch:', localStorage.getItem('user_token')?.substring(0, 15) + '...');
@@ -28,7 +34,8 @@ const problemService = {
   getAllProblems,
   getPagedProblems,
   getProblemById,
-  getProblemTestCases
+  getProblemTestCases,
+  getSolvedProblems
 };
 
 export default problemService;

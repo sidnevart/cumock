@@ -20,4 +20,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     int countByUserIdAndProblemIdAndContestId(Long userId, Long problemId, Long contestId);
 
     List<Submission> findByUserIdAndProblemIdAndContestId(Long userId, Long problemId, Long contestId);
+    // findByUserIdAndVerdict(Long,String)
+    List<Submission> findByUserIdAndVerdict(Long userId, String verdict);
 }

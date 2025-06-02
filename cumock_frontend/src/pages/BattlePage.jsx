@@ -15,6 +15,7 @@ function BattlePage() {
   const [searchResults, setSearchResults] = useState([]);
   const [selectedChallengedUser, setSelectedChallengedUser] = useState(null);
   const [challenges, setChallenges] = useState([]);
+  const [activeContests, setActiveContests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [challengeLoading, setChallengeLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -28,18 +29,66 @@ function BattlePage() {
   }, [userId]);
 
   const fetchData = async () => {
-    setLoading(true);
     try {
-      // Fetch incoming challenges for the current user
+      const activeContestsResponse = await pvpService.getUserChallenges(userId, 'ONGOING');
+      
+      // Добавление имён пользователей к активным соревнованиям
+      const enhancedContests = await Promise.all(
+        activeContestsResponse.data.map(async (contest) => {
+          // Определяем ID оппонента (того, кто не является текущим пользователем)
+          const opponentId = contest.user1Id === userId ? contest.user2Id : contest.user1Id;
+          
+          try {
+            // Получаем информацию о пользователе через API
+            const opponentResponse = await userService.getUserById(opponentId);
+            return { 
+              ...contest, 
+              opponentUsername: opponentResponse.data.username || `Пользователь #${opponentId}`
+            };
+          } catch (error) {
+            console.error('Error fetching opponent data:', error);
+            return { ...contest, opponentUsername: `Пользователь #${opponentId}` };
+          }
+        })
+      );
+      
+      setActiveContests(enhancedContests);
       const challengesResponse = await pvpService.getUserChallenges(userId, 'CHALLENGE');
-      setChallenges(challengesResponse.data);
+      
+      // Only display challenges where the current user is the recipient (user2Id)
+      const incomingChallenges = challengesResponse.data.filter(challenge => 
+        challenge.user2Id === userId
+      );
+      
+      // Enhance challenges with usernames
+      const enhancedChallenges = await Promise.all(
+        challengesResponse.data.map(async (challenge) => {
+          // No need to fetch username if it's from the current user
+          if (challenge.user1Id === userId) {
+            return { ...challenge, user1Username: user.username };
+          }
+          
+          try {
+            // Fetch username from the server
+            const userResponse = await userService.getUserById(challenge.user1Id);
+            return { 
+              ...challenge, 
+              user1Username: userResponse.data.username || `Пользователь #${challenge.user1Id}` 
+            };
+          } catch (error) {
+            // Fallback to ID if username fetch fails
+            return { ...challenge };
+          }
+        })
+      );
+      
+      setChallenges(enhancedChallenges);
     } catch (error) {
       console.error('Error fetching battle data:', error);
     } finally {
       setLoading(false);
     }
   };
-
   const handleSearchUsers = async () => {
     if (!searchUsername) return;
     setSearchLoading(true);
@@ -200,7 +249,12 @@ function BattlePage() {
             {challenges.map(challenge => (
               <li key={challenge.id} className="challenge-item">
                 <div className="challenge-info">
-                  <span className="challenger">Вызов от: {challenge.user1Username || challenge.user1Id}</span>
+                  <span className="challenger">
+                    {challenge.user1Id === userId 
+                      ? "Вызов от вас" 
+                      : `Вызов от: ${challenge.user1Username || `Пользователь #${challenge.user1Id}`}`
+                    }
+                  </span>
                   <span className="status">Статус: {challenge.status}</span>
                   <span className="expires">Истекает: {new Date(challenge.challengeExpiresAt).toLocaleString()}</span>
                 </div>
@@ -210,6 +264,37 @@ function BattlePage() {
                   </button>
                   <button onClick={() => handleRejectChallenge(challenge.id)} className="reject-button">
                     Отклонить
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="active-contests-section">
+        <h2>Активные соревнования</h2>
+        {activeContests.length === 0 ? (
+          <p className="no-contests">У вас нет активных соревнований.</p>
+        ) : (
+          <ul className="contest-list">
+            {activeContests.map(contest => (
+              <li key={contest.id} className="contest-item">
+                <div className="contest-info">
+                  <span className="contest-id">Соревнование #{contest.id}</span>
+                  <span className="opponent">
+                    Противник: {contest.opponentUsername || 
+                      (contest.user1Id === userId ? 
+                        `Пользователь #${contest.user2Id}` : 
+                        `Пользователь #${contest.user1Id}`)}
+                  </span>
+                  <span className="start-time">
+                    Начало: {new Date(contest.startTime).toLocaleString()}
+                  </span>
+                </div>
+                <div className="contest-actions">
+                  <button onClick={() => navigate(`/pvp/contest/${contest.id}`)} 
+                    className="continue-button">
+                    Перейти
                   </button>
                 </div>
               </li>
